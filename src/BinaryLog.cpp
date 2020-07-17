@@ -9,10 +9,6 @@ BinaryLog::BinaryLog() {
 
 BinaryLog::~BinaryLog() {}
 
-int BinaryLog::available() {
-    return _stream->available();
-}
-
 void BinaryLog::read() {
     while (_stream->available() > 0) {
         uint8_t data = _stream->read();
@@ -32,9 +28,16 @@ void BinaryLog::read() {
             
             // callback
             uint8_t _callbackId = _decodeBuffer[ID_Index];
-            onMessageCallback _callbackP = _callbacks[_callbackId];
-            if (_callbackP != nullptr) {
-                _callbackP(_decodeBuffer + 2, _lenDecoded - 2);
+            
+            if (_callbackId == 255) {
+                if (_callback != nullptr) {
+                    _callback(_decodeBuffer + 2, _lenDecoded - 2);
+                }
+            } else {
+                onMessageCallback _callbackP = _callbacks[_callbackId];
+                if (_callbackP != nullptr) {
+                    _callbackP(_decodeBuffer + 2, _lenDecoded - 2);
+                }
             }
 
         } else {
@@ -61,8 +64,8 @@ void BinaryLog::write() {
     flushWriteBuffer();
 }
 
-void BinaryLog::writeById(uint8_t id) {
-    _writeBuffer[ID_Index] = id;
+void BinaryLog::writeById(short id) {
+    _writeBuffer[ID_Index] = 255;
     write();
 }
 
@@ -83,7 +86,7 @@ bool BinaryLog::push(uint8_t *buffer, size_t length) {
 }
 
 void BinaryLog::onMessage(onMessageCallback callback) {
-    _callbacks[0] = callback;
+    _callback = callback;
 }
 
 void BinaryLog::onMessageById(uint8_t id, onMessageCallback callback) {
@@ -160,9 +163,6 @@ uint8_t BinaryLog::crc8(uint8_t *buffer, size_t length) {
     for (i = 0; i < length; i++) {
         crc = _crcLookup[buffer[i] ^ crc];
     }
-
-    _stream->print("crc: ");
-    _stream->println(crc);
 
     return crc;
 

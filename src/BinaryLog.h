@@ -12,8 +12,6 @@ public:
 
     void read();
 
-    int available();
-
     void write();
 
     void writeById(uint8_t id);
@@ -39,6 +37,7 @@ private:
     // Array of ids attatched to message instances
     // indexed up to 32
     onMessageCallback _callbacks[32];
+    onMessageCallback _callback;
 
     uint8_t _writeBuffer[256];
     uint8_t _writeBufferIndex = 0;
