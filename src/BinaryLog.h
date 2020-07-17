@@ -35,7 +35,7 @@ private:
     Stream *_stream;
 
     // Array of ids attatched to message instances
-    // indexed up to 32
+    // TODO:: make this more robust
     onMessageCallback _callbacks[32];
     onMessageCallback _callback;
 

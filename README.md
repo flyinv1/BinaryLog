@@ -67,7 +67,7 @@ void setup() {
     Serial.begin(115200);
     log.setStream(&Serial);
 
-    // Set the default custom callback (to be called when a message does include an ID)
+    // Set the default custom callback (to be called when a message does not include an ID)
     log.onMessage(customOnMessageCallback)
 
     // Set additional callbacks (up to 32)
@@ -87,5 +87,3 @@ void customOnMessageByIDCallback(uint8_t *buffer, size_t length) {
 }
 
 ```
-
-<!-- BinaryLog requires a stream instance to read and write data,  -->
