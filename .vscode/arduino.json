@@ -1,5 +1,5 @@
 {
-    "port": "/dev/tty.usbmodem141301",
+    "port": "/dev/tty.usbmodem141401",
     "board": "arduino:avr:uno",
-    "sketch": "read.ino"
+    "sketch": "test.ino"
 }

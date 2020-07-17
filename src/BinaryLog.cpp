@@ -1,19 +1,19 @@
 #include <Arduino.h>
-#include "Nanolog.h"
+#include "BinaryLog.h"
 
 
 // Constructor
-Nanolog::Nanolog() {
+BinaryLog::BinaryLog() {
     _stream = nullptr;
 }
 
-Nanolog::~Nanolog() {}
+BinaryLog::~BinaryLog() {}
 
-int Nanolog::available() {
+int BinaryLog::available() {
     return _stream->available();
 }
 
-void Nanolog::read() {
+void BinaryLog::read() {
     while (_stream->available() > 0) {
         uint8_t data = _stream->read();
         if (data == 0) {
@@ -48,27 +48,31 @@ void Nanolog::read() {
     }
 }
 
-void Nanolog::write() {
+void BinaryLog::write() {
 
     _writeBuffer[CRC_Index] = crc8(_writeBuffer + 1, _writeBufferIndex - 1);
     uint8_t _encodeBuffer[_writeBufferIndex];
     size_t _lenEncoded = stuff(_writeBuffer, _writeBufferIndex, _encodeBuffer);
 
+    for (uint8_t i = 0; i < _lenEncoded; i++) {
+        _stream->write(_encodeBuffer[i]);
+    }
+
     flushWriteBuffer();
 }
 
-void Nanolog::writeById(uint8_t id) {
-    _writeBuffer[ID_Index] = id; 
+void BinaryLog::writeById(uint8_t id) {
+    _writeBuffer[ID_Index] = id;
     write();
 }
 
-void Nanolog::flushWriteBuffer() {
+void BinaryLog::flushWriteBuffer() {
     _writeBufferIndex = 2;
     _writeBuffer[CRC_Index] = 0;
     _writeBuffer[ID_Index] = 0;
 }
 
-bool Nanolog::push(uint8_t *buffer, size_t length) {
+bool BinaryLog::push(uint8_t *buffer, size_t length) {
     if (_writeBufferIndex + length > 255) {
         return false;
     }
@@ -78,19 +82,19 @@ bool Nanolog::push(uint8_t *buffer, size_t length) {
     return true;
 }
 
-void Nanolog::onMessage(onMessageCallback callback) {
-
+void BinaryLog::onMessage(onMessageCallback callback) {
+    _callbacks[0] = callback;
 }
 
-void Nanolog::onMessageById(uint8_t id, onMessageCallback callback) {
-
+void BinaryLog::onMessageById(uint8_t id, onMessageCallback callback) {
+    _callbacks[id] = callback;
 }
 
-void Nanolog::setStream(Stream *stream) {
+void BinaryLog::setStream(Stream *stream) {
     _stream = stream;
 }
 
-size_t Nanolog::stuff(uint8_t *inputBuffer, size_t length, uint8_t *outputBuffer) {
+size_t BinaryLog::stuff(uint8_t *inputBuffer, size_t length, uint8_t *outputBuffer) {
 
     // This is an implementation of COBS by jacquesf:
     // https://github.com/jacquesf/COBS-Consistent-Overhead-Byte-Stuffing
@@ -124,7 +128,7 @@ size_t Nanolog::stuff(uint8_t *inputBuffer, size_t length, uint8_t *outputBuffer
 
 }
 
-size_t Nanolog::unstuff(uint8_t *inputBuffer, size_t length, uint8_t *outputBuffer) {
+size_t BinaryLog::unstuff(uint8_t *inputBuffer, size_t length, uint8_t *outputBuffer) {
     size_t read_index = 0;
     size_t write_index = 0;
     uint8_t code;
@@ -148,7 +152,7 @@ size_t Nanolog::unstuff(uint8_t *inputBuffer, size_t length, uint8_t *outputBuff
     }
 }
 
-uint8_t Nanolog::crc8(uint8_t *buffer, size_t length) {
+uint8_t BinaryLog::crc8(uint8_t *buffer, size_t length) {
     // 8 bit CRC (CRC8-ITU w/ 0x07)
     uint8_t crc = 0;
     uint8_t i;
@@ -156,6 +160,9 @@ uint8_t Nanolog::crc8(uint8_t *buffer, size_t length) {
     for (i = 0; i < length; i++) {
         crc = _crcLookup[buffer[i] ^ crc];
     }
+
+    _stream->print("crc: ");
+    _stream->println(crc);
 
     return crc;
 

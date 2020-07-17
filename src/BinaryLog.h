@@ -1,14 +1,14 @@
 #include <Arduino.h>
 
-class Nanolog {
+class BinaryLog {
 
     typedef void (*onMessageCallback)(const uint8_t *buffer, const size_t length);
 
 public:
 
-    Nanolog();
+    BinaryLog();
 
-    ~Nanolog();
+    ~BinaryLog();
 
     void read();
 
